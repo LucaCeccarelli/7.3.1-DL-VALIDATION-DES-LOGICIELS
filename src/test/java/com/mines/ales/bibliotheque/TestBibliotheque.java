@@ -23,6 +23,11 @@ class TestBibliotheque {
         abonne = mock(Abonne.class);
     }
     // S1
+    /**
+     * Scénario S1 - Marie Dupont cherche à se connecter au système avec un numéro d'abonné
+     * mais elle n'est pas reconnue par le système (mauvais nom, prénom ou numéro d'abonné),
+     * le système doit retourner une exception.
+     */
     @Test
     void test_s1_identification_invalide_declenche_exception() {
         when(bibliotheque.identification("Marie", "Dupont", "A001"))
@@ -33,6 +38,11 @@ class TestBibliotheque {
     }
 
     // S2
+    /**
+     * Scénario S2 - Jeanne Dupont cherche à se connecter au système et l'opération se passe
+     * avec succès. Elle réalise ensuite une recherche pour connaître l'ensemble des titres
+     * de la catégorie Polar. Elle obtient la liste de tous les Polars.
+     */
     @Test
     void test_s2_identification_valide_et_recherche_polar() {
         List<Livre> polars = List.of(
@@ -49,6 +59,11 @@ class TestBibliotheque {
     }
 
     // S3
+    /**
+     * Scénario S3 - Un abonné identifié réalise une recherche sur la catégorie Voyage.
+     * Or il n'y a aucun livre de cette catégorie dans le fonds documentaire.
+     * La recherche lui renvoie une liste vide.
+     */
     @Test
     void test_s3_recherche_voyage_sans_resultat() {
         when(bibliotheque.identification("Jeanne", "Dupont", "B002")).thenReturn(abonne);
@@ -61,6 +76,11 @@ class TestBibliotheque {
     }
 
     // S4
+    /**
+     * Scénario S4 - Un abonné identifié réserve un ouvrage existant dans le fonds mais indisponible.
+     * Son numéro d'abonné et la date de la réservation sont ajoutés à la liste des abonnés
+     * ayant réservé cet ouvrage.
+     */
     @Test
     void test_s4_reservation_ouvrage_indisponible_ajoute_attente() {
         Livre livre = new Livre("978-2-07-036822-8", "Le Silence", "Polar");
@@ -75,6 +95,10 @@ class TestBibliotheque {
     }
 
     // S5
+    /**
+     * Scénario S5 - Un abonné identifié réserve un ouvrage existant dans le fonds et disponible.
+     * Le système lui propose de l'emprunter.
+     */
     @Test
     void test_s5_reservation_ouvrage_disponible_propose_emprunt() {
         Livre livre = new Livre("978-2-07-036822-8", "Le Silence", "Polar");
@@ -89,6 +113,10 @@ class TestBibliotheque {
     }
 
     // S6
+    /**
+     * Scénario S6 - Un abonné identifié réserve un ouvrage n'existant pas dans le fonds.
+     * Le système doit retourner une exception.
+     */
     @Test
     void test_s6_reservation_ouvrage_inexistant_declenche_exception() {
         Livre livre = new Livre("978-0-00-000000-0", "Inconnu", "Divers");
@@ -102,6 +130,9 @@ class TestBibliotheque {
     }
 
     // S7
+    /**
+     * Scénario S7 - Un abonné s'identifie, il se voit retourner la liste de ses emprunts en retard.
+     */
     @Test
     void test_s7_consultation_emprunts_en_retard() {
         Exemplaire exemplaire = new Exemplaire("978-2-07-036822-8", 1);
@@ -118,6 +149,10 @@ class TestBibliotheque {
     }
 
     // S8
+    /**
+     * Scénario S8 - Un abonné a emprunté un livre le 30 janvier. Il s'identifie à nouveau le 1 mars.
+     * Le livre doit figurer dans la liste des emprunts en retard.
+     */
     @Test
     void test_s8_emprunt_du_30_janvier_est_en_retard_le_1_mars() {
         Exemplaire exemplaire = new Exemplaire("978-2-07-036822-8", 2);
@@ -136,6 +171,10 @@ class TestBibliotheque {
     }
 
     // S9
+    /**
+     * Scénario S9 - Un abonné identifié emprunte un livre. Le stock est mis à jour pour refléter
+     * l'emprunt. Le numéro d'abonné et celui de l'ouvrage emprunté sont mémorisés.
+     */
     @Test
     void test_s9_emprunt_ouvrage_met_a_jour_stock_et_memorise_abonne() {
         Exemplaire exemplaire = new Exemplaire("978-2-07-036822-8", 3);
@@ -152,6 +191,10 @@ class TestBibliotheque {
     }
 
     // S10
+    /**
+     * Scénario S10 - Un abonné ayant emprunté un ouvrage, le retourne dans les temps.
+     * Le stock est mis à jour.
+     */
     @Test
     void test_s10_retour_dans_les_temps_met_a_jour_stock() {
         Exemplaire exemplaire = new Exemplaire("978-2-07-036822-8", 3);
@@ -165,6 +208,10 @@ class TestBibliotheque {
     }
 
     // S11
+    /**
+     * Scénario S11 - Un abonné ayant emprunté un ouvrage, le retourne en retard.
+     * Le stock est mis à jour. L'abonné se voit notifier le retard.
+     */
     @Test
     void test_s11_retour_en_retard_notifie_le_retard() {
         Exemplaire exemplaire = new Exemplaire("978-2-07-036822-8", 3);
@@ -178,6 +225,10 @@ class TestBibliotheque {
     }
 
     // S12
+    /**
+     * Scénario S12 - Un abonné ayant réservé un ouvrage vient l'emprunter.
+     * Il est le premier sur la liste des personnes l'ayant réservé. L'emprunt aboutit.
+     */
     @Test
     void test_s12_emprunt_reserve_premier_dans_la_file() {
         Livre livre = new Livre("978-2-07-036822-8", "Le Silence", "Polar");
@@ -193,6 +244,11 @@ class TestBibliotheque {
     }
 
     // S12
+    /**
+     * Scénario S12 - Un abonné ayant réservé un ouvrage vient l'emprunter.
+     * Il n'est pas le premier sur la liste des personnes l'ayant réservé.
+     * L'emprunt n'aboutit pas et l'abonné est averti de sa position sur la liste d'attente.
+     */
     @Test
     void test_s12_emprunt_reserve_pas_premier_dans_la_file() {
         Livre livre = new Livre("978-2-07-036822-8", "Le Silence", "Polar");
