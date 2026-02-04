@@ -12,14 +12,14 @@ public class Abonne {
     }
 
     public String getNom() {
-        return nom;
+        throw new UnsupportedOperationException("Non implemente");
     }
 
     public String getPrenom() {
-        return prenom;
+        throw new UnsupportedOperationException("Non implemente");
     }
 
     public String getNumeroAbonne() {
-        return numeroAbonne;
+        throw new UnsupportedOperationException("Non implemente");
     }
 }

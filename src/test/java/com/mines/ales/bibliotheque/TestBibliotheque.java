@@ -10,14 +10,21 @@ import static org.mockito.Mockito.when;
 import java.time.LocalDate;
 import java.util.List;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 class TestBibliotheque {
+    private Bibliotheque bibliotheque;
+    private Abonne abonne;
+
+    @BeforeEach
+    public void setUp() {
+        bibliotheque = mock(Bibliotheque.class);
+        abonne = mock(Abonne.class);
+    }
     // S1
     @Test
-    void identification_invalide_declenche_exception() {
-        Bibliotheque bibliotheque = mock(Bibliotheque.class);
-
+    void test_s1_identification_invalide_declenche_exception() {
         when(bibliotheque.identification("Marie", "Dupont", "A001"))
                 .thenThrow(new AbonneInconnuException("Abonne inconnu"));
 
@@ -27,9 +34,7 @@ class TestBibliotheque {
 
     // S2
     @Test
-    void identification_valide_et_recherche_polar() {
-        Bibliotheque bibliotheque = mock(Bibliotheque.class);
-        Abonne abonne = mock(Abonne.class);
+    void test_s2_identification_valide_et_recherche_polar() {
         List<Livre> polars = List.of(
                 new Livre("978-2-07-036822-8", "Le Silence", "Polar"),
                 new Livre("978-2-07-011127-5", "Voyage au bout de la nuit", "Polar"));
@@ -45,10 +50,7 @@ class TestBibliotheque {
 
     // S3
     @Test
-    void recherche_voyage_sans_resultat() {
-        Bibliotheque bibliotheque = mock(Bibliotheque.class);
-        Abonne abonne = mock(Abonne.class);
-
+    void test_s3_recherche_voyage_sans_resultat() {
         when(bibliotheque.identification("Jeanne", "Dupont", "B002")).thenReturn(abonne);
         when(bibliotheque.rechercher("Voyage")).thenReturn(List.of());
 
@@ -60,9 +62,7 @@ class TestBibliotheque {
 
     // S4
     @Test
-    void reservation_ouvrage_indisponible_ajoute_attente() {
-        Bibliotheque bibliotheque = mock(Bibliotheque.class);
-        Abonne abonne = mock(Abonne.class);
+    void test_s4_reservation_ouvrage_indisponible_ajoute_attente() {
         Livre livre = new Livre("978-2-07-036822-8", "Le Silence", "Polar");
         LocalDate dateReservation = LocalDate.of(2026, 1, 15);
 
@@ -76,9 +76,7 @@ class TestBibliotheque {
 
     // S5
     @Test
-    void reservation_ouvrage_disponible_propose_emprunt() {
-        Bibliotheque bibliotheque = mock(Bibliotheque.class);
-        Abonne abonne = mock(Abonne.class);
+    void test_s5_reservation_ouvrage_disponible_propose_emprunt() {
         Livre livre = new Livre("978-2-07-036822-8", "Le Silence", "Polar");
         LocalDate dateReservation = LocalDate.of(2026, 1, 16);
 
@@ -92,9 +90,7 @@ class TestBibliotheque {
 
     // S6
     @Test
-    void reservation_ouvrage_inexistant_declenche_exception() {
-        Bibliotheque bibliotheque = mock(Bibliotheque.class);
-        Abonne abonne = mock(Abonne.class);
+    void test_s6_reservation_ouvrage_inexistant_declenche_exception() {
         Livre livre = new Livre("978-0-00-000000-0", "Inconnu", "Divers");
         LocalDate dateReservation = LocalDate.of(2026, 1, 16);
 
@@ -107,45 +103,41 @@ class TestBibliotheque {
 
     // S7
     @Test
-    void consultation_emprunts_en_retard() {
-        Bibliotheque bibliotheque = mock(Bibliotheque.class);
-        Abonne abonne = mock(Abonne.class);
+    void test_s7_consultation_emprunts_en_retard() {
         Exemplaire exemplaire = new Exemplaire("978-2-07-036822-8", 1);
-        Emprunt emprunt = new Emprunt(abonne, exemplaire, LocalDate.of(2025, 12, 10),
-                LocalDate.of(2026, 1, 10));
-        List<Emprunt> emprunts = List.of(emprunt);
-        LocalDate reference = LocalDate.of(2026, 1, 20);
+        LocalDate dateRetour = LocalDate.of(2026, 1, 20);
 
-        when(bibliotheque.empruntsEnRetard(abonne, reference)).thenReturn(emprunts);
+        when(bibliotheque.identification("Jeanne", "Dupont", "B002")).thenReturn(abonne);
+        when(bibliotheque.retour(abonne, exemplaire, dateRetour)).thenReturn(RetourResult.EN_RETARD);
 
-        List<Emprunt> resultat = bibliotheque.empruntsEnRetard(abonne, reference);
+        Abonne resultatIdentification = bibliotheque.identification("Jeanne", "Dupont", "B002");
+        RetourResult resultat = bibliotheque.retour(resultatIdentification, exemplaire, dateRetour);
 
-        assertEquals(emprunts, resultat);
+        assertSame(abonne, resultatIdentification);
+        assertEquals(RetourResult.EN_RETARD, resultat);
     }
 
     // S8
     @Test
-    void emprunt_du_30_janvier_est_en_retard_le_1_mars() {
-        Bibliotheque bibliotheque = mock(Bibliotheque.class);
-        Abonne abonne = mock(Abonne.class);
+    void test_s8_emprunt_du_30_janvier_est_en_retard_le_1_mars() {
         Exemplaire exemplaire = new Exemplaire("978-2-07-036822-8", 2);
         LocalDate dateEmprunt = LocalDate.of(2026, 1, 30);
-        LocalDate dateRetourPrevue = dateEmprunt.plusMonths(1);
-        Emprunt emprunt = new Emprunt(abonne, exemplaire, dateEmprunt, dateRetourPrevue);
-        LocalDate reference = LocalDate.of(2026, 3, 1);
+        LocalDate dateRetour = LocalDate.of(2026, 3, 1);
+        Emprunt emprunt = new Emprunt(abonne, exemplaire, dateEmprunt, dateEmprunt.plusMonths(1));
 
-        when(bibliotheque.empruntsEnRetard(abonne, reference)).thenReturn(List.of(emprunt));
+        when(bibliotheque.emprunt(abonne, exemplaire, dateEmprunt)).thenReturn(emprunt);
+        when(bibliotheque.retour(abonne, exemplaire, dateRetour)).thenReturn(RetourResult.EN_RETARD);
 
-        List<Emprunt> resultat = bibliotheque.empruntsEnRetard(abonne, reference);
+        Emprunt resultatEmprunt = bibliotheque.emprunt(abonne, exemplaire, dateEmprunt);
+        RetourResult resultatRetour = bibliotheque.retour(abonne, exemplaire, dateRetour);
 
-        assertEquals(List.of(emprunt), resultat);
+        assertEquals(emprunt, resultatEmprunt);
+        assertEquals(RetourResult.EN_RETARD, resultatRetour);
     }
 
     // S9
     @Test
-    void emprunt_ouvrage_met_a_jour_stock_et_memorise_abonne() {
-        Bibliotheque bibliotheque = mock(Bibliotheque.class);
-        Abonne abonne = mock(Abonne.class);
+    void test_s9_emprunt_ouvrage_met_a_jour_stock_et_memorise_abonne() {
         Exemplaire exemplaire = new Exemplaire("978-2-07-036822-8", 3);
         LocalDate dateEmprunt = LocalDate.of(2026, 2, 2);
         LocalDate dateRetourPrevue = dateEmprunt.plusMonths(1);
@@ -161,9 +153,7 @@ class TestBibliotheque {
 
     // S10
     @Test
-    void retour_dans_les_temps_met_a_jour_stock() {
-        Bibliotheque bibliotheque = mock(Bibliotheque.class);
-        Abonne abonne = mock(Abonne.class);
+    void test_s10_retour_dans_les_temps_met_a_jour_stock() {
         Exemplaire exemplaire = new Exemplaire("978-2-07-036822-8", 3);
         LocalDate dateRetour = LocalDate.of(2026, 2, 20);
 
@@ -176,9 +166,7 @@ class TestBibliotheque {
 
     // S11
     @Test
-    void retour_en_retard_notifie_le_retard() {
-        Bibliotheque bibliotheque = mock(Bibliotheque.class);
-        Abonne abonne = mock(Abonne.class);
+    void test_s11_retour_en_retard_notifie_le_retard() {
         Exemplaire exemplaire = new Exemplaire("978-2-07-036822-8", 3);
         LocalDate dateRetour = LocalDate.of(2026, 3, 5);
 
@@ -191,9 +179,7 @@ class TestBibliotheque {
 
     // S12
     @Test
-    void emprunt_reserve_premier_dans_la_file() {
-        Bibliotheque bibliotheque = mock(Bibliotheque.class);
-        Abonne abonne = mock(Abonne.class);
+    void test_s12_emprunt_reserve_premier_dans_la_file() {
         Livre livre = new Livre("978-2-07-036822-8", "Le Silence", "Polar");
         LocalDate dateEmprunt = LocalDate.of(2026, 2, 5);
         EmpruntDecision decision = new EmpruntDecision(EmpruntResult.ACCEPTE, 1,
@@ -208,9 +194,7 @@ class TestBibliotheque {
 
     // S12
     @Test
-    void emprunt_reserve_pas_premier_dans_la_file() {
-        Bibliotheque bibliotheque = mock(Bibliotheque.class);
-        Abonne abonne = mock(Abonne.class);
+    void test_s12_emprunt_reserve_pas_premier_dans_la_file() {
         Livre livre = new Livre("978-2-07-036822-8", "Le Silence", "Polar");
         LocalDate dateEmprunt = LocalDate.of(2026, 2, 6);
         EmpruntDecision decision = new EmpruntDecision(EmpruntResult.REFUSE_POSITION, 2, null);
